@@ -31,19 +31,40 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     private fun checkStats(myStats: MutableList<Statistic>) {
-        val xG = myStats[0]
-        val totalShots = myStats[1]
-        val onTarget = myStats[2]
-        val insideBox = myStats[3]
+        val xG = myStats[0]; val xg1 = xG.home; val xg2 = xG.away
+        val totalShots = myStats[1]; val t1 = totalShots.home; val t2 = totalShots.away
+        val onTarget = myStats[2]; val o1 = onTarget.home; val o2 = onTarget.away
+        val insideBox = myStats[3]; val i1 = insideBox.home; val i2 = insideBox.away
 
-        xG.home
-        xG.away
-        totalShots.home
-        totalShots.away
-        onTarget.home
-        onTarget.away
-        insideBox.home
-        insideBox.away
+        val tx: Float; val ox: Float; val ix: Float
+        val ty: Float; val oy: Float; val iy: Float
+
+        when {
+            t1 > t2 -> {
+                tx = t1; ox = o1; ix = i1
+                ty = t2; oy = o2; iy = i2
+            }
+            t2 > t1 -> {
+                tx = t2; ox = o2; ix = i2
+                ty = t1; oy = o1; iy = i1
+            }
+            else -> return
+        }
+
+        if (ox > oy && ix > iy &&
+            tx / (tx + ty) >= 0.7 &&
+            tx >= 5 && ix / tx >= 0.6
+        ) {
+            sendNotification(
+                "$xg1 --- $xg2 \n" +
+                    "$t1 --- $t2 \n" +
+                    "$o1 --- $o2 \n" +
+                    "$i1 --- $i2 \n"
+            )
+        }
+    }
+
+    private fun sendNotification(content: String) {
     }
 
     private fun setupStats(statistics: Elements): MutableList<Statistic> {

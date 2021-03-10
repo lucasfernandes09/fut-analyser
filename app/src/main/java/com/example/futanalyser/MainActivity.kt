@@ -9,6 +9,8 @@ import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.futanalyser.Constants.Companion.baseUrl
+import com.example.futanalyser.Constants.Companion.date
+import com.example.futanalyser.Constants.Companion.minToCancel
 import com.example.futanalyser.Constants.Companion.userAgent
 import com.example.futanalyser.model.Competition
 import com.example.futanalyser.model.Match
@@ -31,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getMatches() {
         Thread() {
-            val doc: Document = Jsoup.connect(baseUrl).userAgent(userAgent).maxBodySize(Int.MAX_VALUE).get()
+            val doc: Document = Jsoup.connect(baseUrl + date).userAgent(userAgent).maxBodySize(Int.MAX_VALUE).get()
 
             val groupElements = doc.select("div.css-mj57cz-Group")
             groupElements.forEach { groupElement ->
@@ -88,7 +90,7 @@ class MainActivity : AppCompatActivity() {
             alarmIntent
         )
 
-        Handler().postDelayed({ alarmMgr.cancel(alarmIntent) }, 1000 * 60 * 5)
+        Handler().postDelayed({ alarmMgr.cancel(alarmIntent) }, 1000 * 60 * minToCancel)
     }
 
     private fun separeteName(name: String?): Boolean {
