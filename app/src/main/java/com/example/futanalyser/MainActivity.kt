@@ -1,6 +1,8 @@
 package com.example.futanalyser
 
 import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -10,10 +12,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.futanalyser.Constants.Companion.baseUrl
 import com.example.futanalyser.Constants.Companion.date
+import com.example.futanalyser.Constants.Companion.idChannel
 import com.example.futanalyser.Constants.Companion.minToCancel
 import com.example.futanalyser.Constants.Companion.userAgent
 import com.example.futanalyser.model.Competition
 import com.example.futanalyser.model.Match
+import com.microsoft.appcenter.AppCenter
+import com.microsoft.appcenter.analytics.Analytics
+import com.microsoft.appcenter.crashes.Crashes
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
@@ -28,20 +34,26 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        AppCenter.start(
+            application, "6fc8a07e-1e08-4384-9617-368c6d092ca9",
+            Analytics::class.java, Crashes::class.java
+        )
+
+        createNotificationChannel()
         getMatches()
     }
 
     private fun getMatches() {
         Thread() {
-            val doc: Document = Jsoup.connect(baseUrl + date).userAgent(userAgent).maxBodySize(Int.MAX_VALUE).get()
+            val doc: Document = Jsoup.connect("$baseUrl$date").userAgent(userAgent).maxBodySize(Int.MAX_VALUE).get()
 
-            val groupElements = doc.select("div.css-mj57cz-Group")
+            val groupElements = doc.select("div.css-niuknl-Group")
             groupElements.forEach { groupElement ->
                 val nameCompetition = groupElement.select("a.css-1g2mffk-GroupTitleLink").text()
                 val isMyCompetition = separeteName(nameCompetition)
 
                 if (isMyCompetition) {
-                    val matchElements = groupElement.select("a.css-wdtn5d-MatchWrapper-positioning")
+                    val matchElements = groupElement.select("a.css-1r2we3n-MatchWrapper")
                     val matches = setupMatchs(matchElements)
                     val competition = Competition(nameCompetition, matches)
                     myCompetitions.add(competition)
@@ -71,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         val id = System.currentTimeMillis()
         val alarmIntent = Intent(this, AlarmReceiver::class.java).let { intent ->
             intent.putExtra("link", match.link)
+            intent.putExtra("name", match.homeVsAway)
             PendingIntent.getBroadcast(this, id.toInt(), intent, 0)
         }
 
@@ -114,5 +127,18 @@ class MainActivity : AppCompatActivity() {
             matches.add(Match(link, startAt, homeVsAway))
         }
         return matches
+    }
+
+    private fun createNotificationChannel() {
+        val name = "futChannel"
+        val descriptionText = "My channel of notification"
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(idChannel, name, importance).apply {
+            description = descriptionText
+        }
+
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 }
