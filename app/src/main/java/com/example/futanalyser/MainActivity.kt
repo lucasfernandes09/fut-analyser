@@ -23,6 +23,7 @@ import com.microsoft.appcenter.crashes.Crashes
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
+import java.time.LocalDate
 import java.time.LocalTime
 import java.util.*
 
@@ -45,7 +46,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun getMatches() {
         Thread() {
-            val doc: Document = Jsoup.connect("$baseUrl$date").userAgent(userAgent).maxBodySize(Int.MAX_VALUE).get()
+            val day = LocalDate.now().toString().replace("-", "")
+            val doc: Document = Jsoup.connect("$baseUrl$date$day").userAgent(userAgent).maxBodySize(Int.MAX_VALUE).get()
 
             val groupElements = doc.select("div.css-niuknl-Group")
             groupElements.forEach { groupElement ->
@@ -113,6 +115,8 @@ class MainActivity : AppCompatActivity() {
             "GERMANY - 1. BUNDESLIGA" -> true
             "ITALY - SERIE A" -> true
             "FRANCE - LIGUE 1" -> true
+            "CHAMPIONS LEAGUE FINAL STAGE" -> true
+            "EUROPA LEAGUE FINAL STAGE" -> true
             else -> false
         }
     }
@@ -122,7 +126,7 @@ class MainActivity : AppCompatActivity() {
 
         matchElements.forEach { matchElement ->
             val link = matchElement.attr("href")
-            val startAt = matchElement.select("span.css-1v1cnzp-time").text()
+            val startAt = matchElement.select("span.css-8o8lqm").text()
             val homeVsAway = matchElement.text()
             matches.add(Match(link, startAt, homeVsAway))
         }
